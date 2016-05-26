@@ -1,16 +1,42 @@
-# CurseJS
+# cursejs
 
 A nodeJS based implementation of the CurseAPI for bot developers.
-
-## Informations
-
-**This is far from being any close to stable, that's why you won't find it in npm yet**
-
-This is an early early early alpha of the development of this lib, but since there is not much out here, I think it's better than nothing.
+**This is far from being any close to stable**
 
 There is no documentation yet, for now the focus is on having basic features ready, but doc should come soon!
-About the License ! I know I need to put it in every file, but I'm lazy to do it right now, will do in next commits.
+If you want to join the project, or just discuss about Curse implementations you can join the curse server in the related projects section below.
 
-If you want to join the project, or just discuss about Curse implementations you can join this server !
+## Installing
 
-* Unofficial Curse API developers server: https://curse.com/invite/61EMImhMj0GJcXz8xBkoGg
+```
+npm install git://github.com/njibhu/cursejs
+```
+
+## Use of library
+
+```javascript
+var cursejs = require('cursejs');
+var client = new cursejs.Client;
+
+//This is a very basic command handling
+client.on('message_received', function(message){
+    if(message.content === "!ping"){
+        message.reply("pong!");
+    }
+});
+
+client.run("LOGIN", "PASSWORD");
+```
+
+## Requirements
+
+- NodeJS 4+
+- `ws` library
+- `winston` library
+
+Usually `npm` will handle these for you.
+
+## Related Projects
+
+- [Curse unofficial API dev server](https://curse.com/invite/61EMImhMj0GJcXz8xBkoGg)
+- [Java CurseLib](https://github.com/AlexMog/CurseLib)
