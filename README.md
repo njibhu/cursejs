@@ -2,10 +2,6 @@
 
 A nodeJS based implementation of the CurseAPI for bot developers.
 
-## Requirements
-
-* NodeJS >= 6.1 is required !
-
 ## Informations
 
 **This is far from being any close to stable, that's why you won't find it in npm yet**
