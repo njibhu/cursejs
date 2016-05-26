@@ -9,7 +9,7 @@ If you want to join the project, or just discuss about Curse implementations you
 ## Installing
 
 ```
-npm install git://github.com/njibhu/cursejs
+npm install git://github.com/njibhu/cursejs.git
 ```
 
 ## Use of library

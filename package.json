@@ -7,9 +7,6 @@
     "winston": "^2.2.0",
     "ws": "^1.1.0"
   },
-  "engines" : {
-      "node" : ">=6.1.0"
-  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
