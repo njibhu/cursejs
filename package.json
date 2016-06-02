@@ -1,6 +1,6 @@
 {
   "name": "cursejs",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "An unofficial curse api lib",
   "main": "lib/index.js",
   "dependencies": {
