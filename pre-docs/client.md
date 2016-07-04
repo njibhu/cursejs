@@ -22,8 +22,6 @@ The keys are the conversations IDs and the values are instances of the [Conversa
 Client.users is a [map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) instance that regroup all the users that the client encounters during its run time.
 The keys are the users IDs and the values are instances of the [User](./users.md) class.
 
-### Client.messagesCache
-
 ### Client.clientID
 
 ### Client.serverList

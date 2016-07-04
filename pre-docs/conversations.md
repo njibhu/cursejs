@@ -11,8 +11,6 @@
 
 ### Conversation.channel
 
-### Conversation.messageList
-
 
 ## Functions
 
