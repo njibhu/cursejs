@@ -9,9 +9,6 @@
 
 ### Server.client
 
-### Server.nicknames
-Exists only for user that already use the notifications
-
 ### Server.channelList
 
 
