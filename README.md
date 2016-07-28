@@ -1,10 +1,13 @@
 # cursejs
 
-A nodeJS based implementation of the CurseAPI for bot developers.
-**This is far from being any close to stable**
+A nodeJS based implementation of the CurseAPI for bot and third party apps developers.
+**The library is not considered yet to be stable**.
 
-There is no documentation yet, for now the focus is on having basic features ready, but doc should come soon!
-If you want to join the project, or just discuss about Curse implementations you can join the curse server in the related projects section below.
+If you want to join the project, or just discuss about Curse implementations you can join us in the [Curse unofficial API dev server](https://curse.com/invite/61EMImhMj0GJcXz8xBkoGg).
+
+## Documentation
+
+[Library documentation](https://njibhu.github.io/cursejs)
 
 ## Installing
 

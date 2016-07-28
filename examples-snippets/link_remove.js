@@ -3,7 +3,7 @@
 var Client = require('../lib/index.js').Client;
 var app = new Client;
 
-var regex = /(?:(ftp|http|https):\/\/)?(?:[\w-]+\.)+[a-z]{2,8}/;
+var regex = /([A-Za-z0-9]+\.){1,3}([A-Za-z0-9]{2,20})/
 
 function removeLink(message){
     if(message.conversation.ID === "channel-conversation-id"){
