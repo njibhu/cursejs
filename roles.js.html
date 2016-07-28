@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: roles.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: roles.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+var groupsEndpoints = require('../endpoints/groups-v1.js');
+var usersModule = require('./users.js');
+var winston = require('winston');
+
+/**
+ * @class Role
+ * @description Server role users can have on a [Server]{@link Server}
+ * @property    {number}    ID          Identifier of the role, the owner usually has the role 0.
+ * @property    {Server}    server      [Server]{@link Server} owner of this [Role]{@link Role}.
+ * @property    {Client}    client      [Client]{@link Client} object used to create this [Role]{@link Role} instance.
+ * @property    {string}    name        Name of this role.
+ * @property    {number}    rank        Rank of this role, the most powerful rank (the owner), is the lowest, and the less important the bigger the rank is.
+ * @property    {boolean}   isDefault   If true, this is the role of all new users on the server.
+ */
+class Role {
+    constructor(id, name, rank, isDefault, server, client){
+        this.ID = id;
+        this.server = server;
+        this.client = client;
+        this._update(name, rank, isDefault);
+    }
+
+    _update(name, rank, isDefault){
+        this.name = name;
+        this.rank = rank;
+        this.isDefault = isDefault;
+    }
+
+    /**
+     * @description Callback with a boolean to know if a user is member of this group or not, answer is transmitted through callback
+     * @param  {User}       user        User to check
+     * @param  {Function}   callback    callback: (errors, isRole) => {}.
+     * * **errors** is **null** or **undefined** when everything happens correctly.
+     * * **isRole** is a **boolean**, **true** if the [User]{@link User} has the role, **false** if not.
+     */
+    isMember(user, callback){
+        var self = this;
+        groupsEndpoints.getGroupMemberInfo(user.ID, this.server.ID, this.client.token, function(errors, answer){
+            if(errors === null){
+                var data = answer.content;
+                var isRole = false;
+                for (let role of data.Roles){
+                    if(role == self.ID){
+                        isRole = true;
+                    }
+                }
+                callback(null, isRole);
+            }
+            else {
+                winston.log('error', 'Roles.isMember', 'API Request failed, cannot return result.');
+                callback(errors);
+            }
+        });
+    }
+
+    /**
+     * Iterate through all the members of this server role.
+     * @param  {Function}   callback    callback: (errors, user, done) => {}.
+     * * **errors** is **null** or **undefined** when everything happens correctly.
+     * * **user** is a [User]{@link User} member of this role.
+     * * **done** is a **boolean**, **true** when there is no more users to iterate over.
+     * * To stop the iteration return false inside the callback
+     *
+     * @example
+     * myRole.everyMember(function(errors, user, done){
+     *     if(errors == null &amp;&amp; !done){
+     *
+     *         //Work with the user object
+     *
+     *         //This will stop the iteration if the user with curse ID 1 is found
+     *         if(user.ID === 1){
+     *             return false;
+     *         }
+     *     }
+     * });
+     */
+    everyMember(callback){
+        var self = this;
+        var page = 1;
+        var userArray = [];
+        var continueLoop = true;
+        function requestCallback(){
+            groupsEndpoints.searchGroupMember(self.server.ID, undefined, self.ID, 50, page,
+                groupsEndpoints.GroupMemberSearchSortType.DateJoined, true, self.client.token, function(errors, answer){
+                    if(errors === null){
+                        userArray = answer.content;
+
+                        //What if endpoints return empty array ?
+                        if(userArray.length == 0){
+                            continueLoop = false;
+                            callback(null, undefined, true);
+                        } else {
+                            page = page + 1;
+                            //While locale
+                            while(userArray.length > 0 &amp;&amp; continueLoop){
+                                var tempUser = userArray.shift();
+                                var user = new usersModule.User(tempUser.UserID, self.client);
+                                user._username = tempUser.Username;
+
+                                //Stop loop when user return false
+                                continueLoop = callback(null, user, false) != false;
+                            }
+                            if(userArray.length == 0 &amp;&amp; continueLoop){
+                                requestCallback();
+                            }
+                        }
+                    }
+                    else{
+                        callback(errors, undefined, true);
+                    }
+                });
+        }
+        requestCallback();
+    }
+
+
+}
+
+exports.Role = Role;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jul 29 2016 00:02:50 GMT+0200 (Paris, Madrid (heure d’été))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

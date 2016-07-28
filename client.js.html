@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+var EventEmitter = require('events').EventEmitter;
+var Events = require('./events.js').Events;
+var guidManager = require('../utils/guids.js');
+
+var contactsEndpoint = require('../endpoints/contacts-v1.js');
+var conversationsEndpoint = require('../endpoints/conversations-v1.js');
+var loginEndpoint = require('../endpoints/logins-v1.js');
+var groupsEndpoints = require('../endpoints/groups-v1.js');
+var notificationsEndpoint = require('../endpoints/notifications-v1.js');
+var sessionsEndpoint = require('../endpoints/sessions-v1.js');
+var usersModule = require('./users.js');
+
+var winston = require('winston');
+
+var serverModule = require('./servers.js');
+var conversationsModule = require('./conversations.js');
+var notificationsModule = require('./notifications.js');
+
+/**
+ * @class Client
+ * @description [Client]{@link Client} class is the main application class, it's the core of the library
+   that makes all works together. A [Client]{@link Client} represent a user connection to curse servers,
+   it handles the main events that occurs at run time and expose them to a third party application.
+   The [Client]{@link Client} class extends the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) class.
+ *
+ * @property {Map}      servers         Regroup all the servers fetched when the client starts.
+   This map is filled only when using the client.run method. The keys are the servers IDs and the values are
+   instances of the [Server]{@link Server} class.
+
+ * @property {Map}      channels        Regroup all the channels fetched from all the servers when the client starts. This map is filled
+   only when using the client.run method. The keys are the channels IDs and the values are instances of the [Channel]{@link Channel} class.
+
+ * @property {Map}      conversations   Regroup all the conversations that the client encounters during its run time.
+   The keys are the conversations IDs and the values are instances of the [Conversation]{@link Conversation} class.
+
+ * @property {Map}      users           Regroup all the users that the client encounters during its run time.
+   The keys are the users IDs and the values are instances of the [User]{@link User} class.
+
+ * @property {number}   clientID        Curse ID of the connected client.
+   This is very helpful for example to check the ID of the for notificationMessages and ignore self sended messages.
+
+ * @property {string}   username        Curse username of the connected client.
+
+ */
+class Client extends EventEmitter {
+    constructor(debugLevel){
+        super();
+
+        if(debugLevel === undefined){
+            debugLevel = 'info';
+        }
+
+        //Change console settings for the logger
+        winston.remove(winston.transports.Console)
+        winston.add(winston.transports.Console, {
+            level: debugLevel,
+            prettyPrint: true,
+            colorize: true,
+            silent: false,
+            timestamp: true
+        });
+
+        this._loginSession;
+        this._notifier;
+        this._loginRequest = {login: "", password: ""};
+        this._connected = false;
+
+        this.machineKey = guidManager.getMachineKey();
+        this.token;
+        this._tokenExpires;
+        this._tokenRenewAfter;
+        this._timeGapToServer;
+        this._readySent = false;
+
+        this.servers = new Map();
+        this.channels = new Map();
+        this.conversations = new Map();
+        this.users = new Map();
+
+        this.clientID;
+
+        this.friendList = []; //Please don't use them until we can manage friends at user level.
+
+    }
+
+    /**
+     * @description Connects the client to the curse API endpoints.
+       This function will not get any server information ready, and will neither start the notifier from the notification
+       module making impossible to receive and send new messages. **For general use the [Client.run]{@link Client#run} function.**
+     * @param  {string}     login       Your Curse login name
+     * @param  {string}     password    Your Curse login password
+     * @param  {Function}   callback    Facultative arg, callback: (errors) => {}.
+       This function can take an argument errors that is null or undefined when function ends correctly.
+     */
+    login(login, password, callback){
+        //Define an empty void if no callback specified
+        if(callback === undefined){
+            callback = _ => {};
+        }
+
+        this._loginRequest = new loginEndpoint.LoginRequest(login, password);
+        var self = this; //Make object avalaible for callbacks
+
+        loginEndpoint.login(this._loginRequest, function(errors, answer){
+            if(errors === null){
+                self._loginSession = answer['Session'];
+                self.token = answer['Session']['Token'];
+                self._tokenExpires = answer['Session']['Expires'];
+                self._tokenRenewAfter = answer['Session']['RenewAfter'];
+                self.clientID = answer['Session']['UserID'];
+                // ! ABOUT timeGapToServer: careful with the signs +/- you're using
+                self._timeGapToServer = Date.now() - answer['Timestamp'];
+                self._connected = true;
+
+                //Renew session automatically
+                self._renewSessionTimeout = setTimeout(function(){
+                    self._renewSession();
+                }, (self._tokenRenewAfter - Date.now()) + self._timeGapToServer);
+
+                winston.log('info', 'Client.login', 'Succesfully connected to REST Curse API.');
+                self.emit(Events.CONNECTED);
+                callback(null);
+            } else {
+                winston.log('error', 'Client.login:', 'Status:', errors);
+                callback(errors);
+            }
+        });
+    }
+
+    /*
+     * Renew the token for all the rest api request before the rest session exprire (renew is automatically scheduled)
+     */
+    _renewSession(){
+        clearTimeout(this._renewSessionTimeout);
+        var self = this;
+        loginEndpoint.loginRenew(this.token, function(errors, answer){
+            if(errors === null){
+                var data = answer.content;
+                winston.log('debug', 'Client._renewSession', 'Successful token renew');
+                self.token = data.Token;
+                self._tokenExpires = data.Expires;
+                self._tokenRenewAfter = data.RenewAfter;
+                self._renewSessionTimeout = setTimeout(function(){
+                    self._renewSession();
+                }, (self._tokenRenewAfter - Date.now()) + self._timeGapToServer);
+            } else {
+                winston.log('error', 'Client._renewSession', 'Couldn\'t renew the token will try again in 5minutes', errors);
+                self._renewSessionTimeout = setTimeout(function(){
+                    self._renewSession();
+                }, 300000);
+            }
+        });
+    }
+
+    /*
+     * Fill up the servers and friendList properties (erasing existing, DO NOT use it to update the server infos)
+     * (The erasing thing is not true anymore but it's still not a good idea to do so, we'll get some change later..).
+     */
+    _loadContacts(callback){
+        //Define an empty void if no callback specified
+        if(callback === undefined){
+            callback = _ => {};
+        }
+
+        var self = this;
+        contactsEndpoint.contacts(this.token, function(errors, answer){
+            if(errors === null){
+                for (let groupAnswer of answer['Groups']){
+                    //Take only servers
+                    if(groupAnswer.GroupType == groupsEndpoints.GroupType.Large){
+                        //Check that server is not already existing
+                        if(self.servers.has(groupAnswer.GroupID) == false){
+                            var server = new serverModule.Server(groupAnswer.GroupID, self);
+                        }
+                    }
+                }
+
+                self.friendList = answer['Friends']; //Thoses friends are not useable yet (who needs friends ?)
+                callback(null);
+            } else {
+                callback(errors);
+            }
+        });
+
+    }
+
+    get username(){
+        if(this._connected){
+            return this._loginSession.Username;
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * @description All-in-one function that makes the client to work seemlessly.
+       The [Client]{@link Client} class will emit the *ready* event when the client is connected and ready.
+     * @param  {string} login    Your Curse login name
+     * @param  {string} password Your Curse login password
+     * @example
+     * var client = new cursejs.Client;
+     *
+     * //Internal use of the client
+     * client.on('ready', function(){
+     *
+     *   //My own code...
+     *
+     * });
+     *
+     * //Start the client after defining the events handler
+     * client.run('login', 'password');
+     */
+    run(login, password){
+        var self = this;
+
+        this._notifier = new notificationsModule.Notifier(this);
+
+        this.on(Events.CONNECTED, function(){
+            self._loadContacts(function(errors){
+                if(errors === null){
+                    self._notifier.start();
+                }
+                else {
+                    winston.log('error', 'Client.run', 'Cannot get contacts', errors);
+                }
+            });
+
+        });
+
+        this.login(login, password);
+    }
+
+    _ready(){
+        var serversReady = true;
+        //check servers are ready
+        for (let server of this.servers.values()){
+            if(!server._ready){
+                serversReady = false;
+                break;
+            }
+        }
+
+        // Everything is ready
+        if(this._notifier._ready &amp;&amp; serversReady &amp;&amp; !this._readySent){
+            this._readySent = true;
+            this.emit(Events.READY);
+        }
+    }
+
+    /**
+     * @description Send a message in a conversation.
+     * @param  {Conversation}   conversation    Conversation
+     * @param  {string}         content         Message content
+     * @param  {Function}       callback        Facultative arg, callback: (errors) => {}.
+       This function can take an argument errors that is null or undefined when function ends correctly.
+     */
+    sendMessage(conversation, content, callback){
+        //Define an empty void if no callback specified
+        if(callback === undefined){
+            callback = _ => {};
+        }
+        conversation.sendMessage(content, callback);
+    }
+
+    /**
+     * @description Join a server using a specified invite code.
+     * @param  {string}   inviteCode Invitation code
+     * @param  {Function} callback   Function callback
+     * @example
+     * client.redeemInvitation(myInvitationCode, function(errors){
+     *   if(errors === null){
+     *     //Code when server have succesfully been joined
+     *   }
+     * });
+     */
+    redeemInvitation(inviteCode, callback){
+        //Define an empty void if no callback specified
+        if(callback === undefined){
+            callback = _ => {};
+        }
+
+        var self = this
+        groupsEndpoints.getInvitationDetails(inviteCode, this.token, function(errors, answer){
+            if(errors === null){
+                var invitDetails = answer.content;
+                groupsEndpoints.joinInvitation(inviteCode, self.token, function(errors, _){
+                    if(errors === null){
+                        if(self.servers.has(invitDetails.GroupID) == false &amp;&amp;
+                            invitDetails.GroupType == groupsEndpoints.GroupType.Large){
+                                var server = new serverModule.Server(invitDetails.GroupID, self);
+                        }
+                        callback();
+                    } else {
+                        callback(errors);
+                    }
+                });
+            }
+            else {
+                callback(errors);
+            }
+        })
+
+
+    }
+
+    /**
+     * @description Get a [User]{@link User} object from its ID.
+     * @param  {number} userID    ID of the curse user
+     * @return {User}             Corresponding User object
+     * @example
+     * client.getUser(myUserID, function(correspondingUser){
+     *
+     *   //Working with the user object: correspondingUser
+     *
+     * });
+     */
+    getUser(userID){
+        if(this.users.has(userID)){
+            return this.users.get(userID);
+        }
+        else {
+            return new usersModule.User(userID, this);
+        }
+    }
+
+    /**
+     * @description Closes the [Client]{@link Client} by ending the notifier connection and returning
+       the run function.
+     */
+    close(){
+      //TODO Client.close
+    }
+
+}
+
+exports.Client = Client;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jul 29 2016 00:02:50 GMT+0200 (Paris, Madrid (heure d’été))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
