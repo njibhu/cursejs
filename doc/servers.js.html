@@ -188,67 +188,22 @@ class Server {
     }
 
     /*
-     * Update the server channel list, call the callback when done
+     * Fetch group informations about the current server and send it to the update function
      * @param  {Function} callback Callback when list of channel is updated
      */
     _updateInformations(callback){
+        if(callback === undefined){
+            callback = _ => {};
+        }
         //Update channels, update roles, member count..
         var self = this;
 
         groupsEndpoints.getGroup(this.ID, false, this.client.token, function(errors, data){
             if(errors === null){
-                var groupNotif = data.content;
-
-                //To use only internally
-                self._groupNotification = groupNotif;
-
-                //Set server name
-                self.name = self._groupNotification.GroupTitle;
-
-                // Generate or update channelList:
-                for (let channelItem of groupNotif.Channels){
-                    //Checking that channel doesn't exit
-                    if(self.client.channels.has(channelItem.GroupID) == false){
-                        var channel = new channelsModule.Channel(channelItem, self, self.client);
-                        self.channelList.push(channel);
-                    }
-
-                    // If channel already exists, then we update it and check that it's in channelList
-                    else {
-                        var channel = self.client.channels.get(channelItem.GroupID);
-                        channel._update(channelItem);
-                        if(self.channelList.indexOf(channel) === -1){
-                            self.channelList.push(channel);
-                        }
-                    }
-                }
-
-                // Generate or update server roles
-                for (let roleItem of groupNotif.Roles){
-                    //Checking that the role is not a duplicate
-                    if(self.roles.has(roleItem["RoleID"]) === false){
-                        var role = new rolesModule.Role(
-                            roleItem["RoleID"],
-                            roleItem["Name"],
-                            roleItem["Rank"],
-                            roleItem["IsDefault"],
-                            self,
-                            self.client
-                        );
-                        self.roles.set(roleItem["RoleID"], role);
-                    }
-                    //If the role already exist, we just update it
-                    else {
-                        self.roles.get(roleItem["RoleID"]._update(
-                            roleItem["Name"],
-                            roleItem["Rank"],
-                            roleItem["IsDefault"]));
-                    }
-                }
+                self._updateFromInformations(data.content, callback);
 
                 //Callback with no errors
                 callback(null);
-
             } else {
                 winston.log('error', 'Server._updateInformations', 'Cannot fetch server informations, no update made');
                 winston.log('debug', 'Server._updateInformations', groupNotification.GroupID, groupNotification.GroupTitle);
@@ -257,6 +212,58 @@ class Server {
             }
         });
 
+    }
+
+    /*
+     * Update the server, it's channels, it's roles.. from a group notification
+     */
+    _updateFromInformations(groupNotif){
+        //To use only internally
+        this._groupNotification = groupNotif;
+
+        //Set server name
+        this.name = this._groupNotification.GroupTitle;
+
+        // Generate or update channelList:
+        for (let channelItem of groupNotif.Channels){
+            //Checking that channel doesn't exit
+            if(this.client.channels.has(channelItem.GroupID) == false){
+                var channel = new channelsModule.Channel(channelItem, this, this.client);
+                this.channelList.push(channel);
+            }
+
+            // If channel already exists, then we update it and check that it's in channelList
+            else {
+                var channel = this.client.channels.get(channelItem.GroupID);
+                channel._update(channelItem);
+                if(this.channelList.indexOf(channel) === -1){
+                    this.channelList.push(channel);
+                }
+            }
+        }
+
+        // Generate or update server roles
+        for (let roleItem of groupNotif.Roles){
+            //Checking that the role is not a duplicate
+            if(this.roles.has(roleItem["RoleID"]) === false){
+                var role = new rolesModule.Role(
+                    roleItem["RoleID"],
+                    roleItem["Name"],
+                    roleItem["Rank"],
+                    roleItem["IsDefault"],
+                    this,
+                    this.client
+                );
+                this.roles.set(roleItem["RoleID"], role);
+            }
+            //If the role already exist, we just update it
+            else {
+                this.roles.get(roleItem["RoleID"])._update(
+                    roleItem["Name"],
+                    roleItem["Rank"],
+                    roleItem["IsDefault"]);
+            }
+        }
     }
 
     /**
@@ -392,18 +399,7 @@ class Server {
      * @param  {boolean}    SortAscending Ascending is **true**, descending is **false**.
      * @param  {Function}   callback  Callback: (errors, results) => {}.
      * * **errors** is null or undefined when function ends correctly.
-     * * **results** is an **array** of researchResult objects following a specific definition:
-     *    * **User** - Corresponding [User]{@link User} object.
-     *    * **Username** - **string**, Curse username.
-     *    * **Nickname** - **string**, Nickname of the user on this server, if set.
-     *    * **BestRole** - [Role]{@link Role} corresponding to the best role of the user on this server.
-     *    * **Roles** - Array of [Role]{@link Role} to which the user is member of on this server.
-     *    * **DateJoined** - **number**, server timestamp when the user joined this server.
-     *    * **ConnectionStatus** - **number**
-     *    * **DateLastSeen** - **number**, server timestamp when the user was last seen (connected).
-     *    * **DateLastActive** - **number**, server timestamp when the user was last active.
-     *    * **IsActive** - **boolean**, true if the user is active.
-     *    * **CurrentGameID** - **number**, ID of the current played game by the user.
+     * * **results** is an **array** of [ServerMemberResult]{@link ServerMemberResult}
      */
     searchUser(Username, RoleID, ResultSize, ResultPage, SortType, SortAscending, callback){
         var self = this;
@@ -413,26 +409,9 @@ class Server {
                     var data = answer.content;
                     var results = [];
                     for (let item of data){
-                        //Create researchResult object
-                        var researchResult = {
-                            User: self.client.getUser(item.UserID),
-                            Username: item.Username,
-                            Nickname: item.Nickname,
-                            BestRole: self.roles.get(item.BestRole),
-                            Roles: [],
-                            DateJoined: item.DateJoined,
-                            ConnectionStatus: item.ConnectionStatus,
-                            DateLastSeen: item.DateLastSeen,
-                            DateLastActive: item.DateLastActive,
-                            IsActive: item.IsActive,
-                            CurrentGameID: item.CurrentGameID
-                        }
-                        //Add roles to researchResult
-                        for (let role of item.Roles){
-                            researchResult.Roles.push(self.roles.get(role));
-                        }
+                        var servermember = new ServerMemberResult(item, self);
                         //Add researchResult to result array
-                        results.push(researchResult);
+                        results.push(servermember);
                     }
                     callback(null, results);
                 }
@@ -443,9 +422,70 @@ class Server {
         );
     }
 
+    getUserInfo(user){
+        //TODO: getUserInfo, fetch server specific informations about a given user
+    }
+
+    everyBans(){
+        //TODO: everyBans, iterate through server bans
+    }
+
+}
+
+/**
+ * @class ServerMemberResult
+ * @description ServerMemberResult is defining the structure of informations returned with a user when searching into the members of this server.
+ * @property {Server}       server
+ * @property {User}         user                Corresponding [User]{@link User} object.
+ * @property {string}       username            Curse username.
+ * @property {string}       nickname            Nickname of the user on this server, if set.
+ * @property {Role}         bestRole            [Role]{@link Role} corresponding to the best role of the user on this server.
+ * @property {array}        roles               Array of [Role]{@link Role} to which the user is member of on this server.
+ * @property {number}       dateJoined          Server timestamp when the user joined this server.
+ * @property {number}       connectionStatus
+ * @property {number}       dateLastSeen        Server timestamp when the user was last seen (connected).
+ * @property {number}       dateLastActive      Server timestamp when the user was last active.
+ * @property {number}       dateRemoved
+ * @property {boolean}      isActive            True if the user is active.
+ * @property {number}       currentGameID       ID of the current played game by the user.
+ * @property {boolean}      isVoiceMuted
+ * @property {boolean}      isVoiceDeafened
+ * @property {number}       avatarTimestamp
+ * @property {boolean}      isVerified
+ * @property {boolean}      isBanned
+ */
+class ServerMemberResult {
+    constructor(groupMemberContract, server){
+        this.server = server;
+        this.user = server.client.getUser(groupMemberContract.UserID);
+        this.username = groupMemberContract.Username;
+        this.nickname = groupMemberContract.Nickname;
+        this.bestRole = server.roles.get(groupMemberContract.BestRole);
+        this.roles = [];
+        this.dateJoined = groupMemberContract.DateJoined;
+        this.connectionStatus = groupMemberContract.ConnectionStatus;
+        this.dateLastSeen = groupMemberContract.DateLastSeen;
+        this.dateLastActive = groupMemberContract.DateLastActive;
+        this.dateRemoved = groupMemberContract.DateRemoved;
+        this.isActive = groupMemberContract.IsActive;
+        this.currentGameID = groupMemberContract.currentGameID;
+        this.isVoiceMuted = groupMemberContract.IsVoiceMuted;
+        this.isVoiceDeafened = groupMemberContract.IsVoiceDeafened;
+        this.avatarTimestamp = groupMemberContract.AvatarTimestamp;
+        this.isVerified = groupMemberContract.IsVerified;
+        this.isBanned = groupMemberContract.IsBanned;
+
+        for(let role of groupMemberContract.Roles){
+            this.roles.push(server.roles.get(role));
+        }
+
+        //Help our local username cache here:
+        this.user._username = groupMemberContract.Username;
+    }
 }
 
 exports.Server = Server;
+exports.ServerMemberResult = ServerMemberResult;
 </code></pre>
         </article>
     </section>
@@ -456,13 +496,13 @@ exports.Server = Server;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 30 2016 03:49:16 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Aug 10 2016 13:41:43 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>

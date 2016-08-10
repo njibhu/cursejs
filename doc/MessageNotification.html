@@ -248,7 +248,7 @@
 
             
 
-            <td class="description last"><p>Curse ID of the author of the message (same as MessageNotification.sender.ID).</p></td>
+            <td class="description last"><p><strong>DEPRECATED</strong> Curse ID of the author of the message (Please use MessageNotification.sender.ID).</p></td>
         </tr>
 
     
@@ -413,6 +413,167 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>editedTimestamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Timestamp of the last edition of the message, if none, it is set at 0.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>editedUser</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="User.html">User</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="User.html">User</a> object corresponding to the author of the last edition of this message.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>editedUsername</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Nickname or Curse username of the author of the last edition of this message.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>deletedTimestamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Timestamp of the suppression of the message, if none, it is set at 0.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>deletedUser</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="User.html">User</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="User.html">User</a> object corresponding to the author of the suppression this message.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>deletedUsername</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Nickname or Curse username of the author of the suppression of this message.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mentions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Array of {Users}[@link User] mentioned in this message.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -448,7 +609,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="messages.js.html">messages.js</a>, <a href="messages.js.html#line33">line 33</a>
+        <a href="messages.js.html">messages.js</a>, <a href="messages.js.html#line40">line 40</a>
     </li></ul></dd>
     
 
@@ -598,7 +759,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="messages.js.html">messages.js</a>, <a href="messages.js.html#line105">line 105</a>
+        <a href="messages.js.html">messages.js</a>, <a href="messages.js.html#line130">line 130</a>
     </li></ul></dd>
     
 
@@ -753,7 +914,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="messages.js.html">messages.js</a>, <a href="messages.js.html#line80">line 80</a>
+        <a href="messages.js.html">messages.js</a>, <a href="messages.js.html#line105">line 105</a>
     </li></ul></dd>
     
 
@@ -795,13 +956,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 30 2016 03:49:17 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Aug 10 2016 13:41:43 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>

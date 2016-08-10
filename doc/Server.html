@@ -788,7 +788,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line277">line 277</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line284">line 284</a>
     </li></ul></dd>
     
 
@@ -1075,7 +1075,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line337">line 337</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line344">line 344</a>
     </li></ul></dd>
     
 
@@ -1314,20 +1314,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
             <td class="description last"><p>Callback: (errors, results) =&gt; {}.</p>
 <ul>
 <li><strong>errors</strong> is null or undefined when function ends correctly.</li>
-<li><strong>results</strong> is an <strong>array</strong> of researchResult objects following a specific definition:<ul>
-<li><strong>User</strong> - Corresponding <a href="User.html">User</a> object.</li>
-<li><strong>Username</strong> - <strong>string</strong>, Curse username.</li>
-<li><strong>Nickname</strong> - <strong>string</strong>, Nickname of the user on this server, if set.</li>
-<li><strong>BestRole</strong> - <a href="Role.html">Role</a> corresponding to the best role of the user on this server.</li>
-<li><strong>Roles</strong> - Array of <a href="Role.html">Role</a> to which the user is member of on this server.</li>
-<li><strong>DateJoined</strong> - <strong>number</strong>, server timestamp when the user joined this server.</li>
-<li><strong>ConnectionStatus</strong> - <strong>number</strong></li>
-<li><strong>DateLastSeen</strong> - <strong>number</strong>, server timestamp when the user was last seen (connected).</li>
-<li><strong>DateLastActive</strong> - <strong>number</strong>, server timestamp when the user was last active.</li>
-<li><strong>IsActive</strong> - <strong>boolean</strong>, true if the user is active.</li>
-<li><strong>CurrentGameID</strong> - <strong>number</strong>, ID of the current played game by the user.</li>
-</ul>
-</li>
+<li><strong>results</strong> is an <strong>array</strong> of <a href="ServerMemberResult.html">ServerMemberResult</a></li>
 </ul></td>
         </tr>
 
@@ -1369,7 +1356,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line380">line 380</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line376">line 376</a>
     </li></ul></dd>
     
 
@@ -1547,7 +1534,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line241">line 241</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line248">line 248</a>
     </li></ul></dd>
     
 
@@ -1702,7 +1689,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line318">line 318</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line325">line 325</a>
     </li></ul></dd>
     
 
@@ -1744,13 +1731,13 @@ All parameters are facultative, but use everyServerMembers to check the server m
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 30 2016 03:49:17 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Aug 10 2016 13:41:43 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>
