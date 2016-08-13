@@ -464,6 +464,148 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
 
     
 
+    <h4 class="name" id="everyBans"><span class="type-signature"></span>everyBans<span class="signature">(callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Iterate through all the bans of the server.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback: (errors, ban, done) =&gt; {}.</p>
+<ul>
+<li><strong>errors</strong> is <strong>null</strong> or <strong>undefined</strong> when everything happens correctly.</li>
+<li><strong>ban</strong> is a <a href="ServerBan.html">ServerBan</a> object of the next ban.</li>
+<li><strong>done</strong> is a <strong>boolean</strong>, <strong>true</strong> when there is no more bans to iterate over.</li>
+<li>To stop the iteration return false inside the callback</li>
+</ul></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line414">line 414</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>myServer.everyBans(function(errors, ban, done){    if(errors == null &amp;&amp; !done){        //Work with the ServerBan object        //Example to stop iterating:        //This will stop the iteration if the user banned has curse ID 1        if(ban.user.ID === 1){            return false;        }    }});</code></pre>
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="everyServerMembers"><span class="type-signature"></span>everyServerMembers<span class="signature">(callback)</span><span class="type-signature"></span></h4>
 
     
@@ -570,7 +712,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line124">line 124</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line125">line 125</a>
     </li></ul></dd>
     
 
@@ -597,7 +739,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>myServer.everyServerMembers(function(errors, user, done){    if(errors == null &amp;&amp; !done){        //Work with the user object        //This will stop the iteration if the user with curse ID 1 is found        if(user.ID === 1){            return false;        }    }});</code></pre>
+    <pre class="prettyprint"><code>myServer.everyServerMembers(function(errors, user, done){    if(errors == null &amp;&amp; !done){        //Work with the user object        //Example to stop iterating:         //This will stop the iteration if the user with curse ID 1 is found        if(user.ID === 1){            return false;        }    }});</code></pre>
 
 
 
@@ -737,16 +879,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
             <td class="description last"><p>Callback: (errors, bans) =&gt; {}.</p>
 <ul>
 <li><strong>errors</strong> is null or undefined when function ends correctly.</li>
-<li><strong>bans</strong> is an <strong>array</strong> of ban objects following a specific definition:<ul>
-<li><strong>user</strong> - Banned <a href="User.html">User</a>.</li>
-<li><strong>userNickname</strong> - Nickname of the banned user.</li>
-<li><strong>banner</strong> - <a href="User.html">User</a> author of the ban.</li>
-<li><strong>bannerNickname</strong> - Nickname of the author of the ban.</li>
-<li><strong>serverTimestamp</strong> - <strong>number</strong>, timestamp of the server at the time of the ban.</li>
-<li><strong>reason</strong> - <strong>string</strong> containing the reason of the ban from the author of the ban.</li>
-<li><strong>isIpBan</strong> - <strong>boolean</strong>, <strong>true</strong> if this is an IP ban.</li>
-</ul>
-</li>
+<li><strong>bans</strong> is an <strong>array</strong> of <a href="ServerBan.html">ServerBan</a>.</li>
 </ul></td>
         </tr>
 
@@ -788,7 +921,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line284">line 284</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line278">line 278</a>
     </li></ul></dd>
     
 
@@ -946,7 +1079,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line404">line 404</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line378">line 378</a>
     </li></ul></dd>
     
 
@@ -1233,7 +1366,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line344">line 344</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line318">line 318</a>
     </li></ul></dd>
     
 
@@ -1514,7 +1647,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line376">line 376</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line350">line 350</a>
     </li></ul></dd>
     
 
@@ -1692,7 +1825,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line248">line 248</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line249">line 249</a>
     </li></ul></dd>
     
 
@@ -1847,7 +1980,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line325">line 325</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line299">line 299</a>
     </li></ul></dd>
     
 
@@ -1889,13 +2022,13 @@ All parameters are facultative, but use everyServerMembers to check the server m
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerBan.html">ServerBan</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Aug 13 2016 06:47:11 GMT+0200 (DST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Aug 13 2016 12:35:54 GMT+0200 (DST)
 </footer>
 
 <script> prettyPrint(); </script>
