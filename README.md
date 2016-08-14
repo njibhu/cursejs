@@ -11,8 +11,23 @@ If you want to join the project, or just discuss about Curse implementations you
 
 ## Installing
 
+#### Branch master:
+(Take this one if you don't know which one to take.)
+
 ```
 npm install git://github.com/njibhu/cursejs.git
+```
+
+#### With branch dev:
+
+```
+npm install git://github.com/njibhu/cursejs.git#dev
+```
+
+## Updating
+
+```
+npm update cursejs
 ```
 
 ## Use of library
@@ -43,3 +58,4 @@ Usually `npm` will handle these for you.
 
 - [Curse unofficial API dev server](https://curse.com/invite/61EMImhMj0GJcXz8xBkoGg)
 - [Java CurseLib](https://github.com/AlexMog/CurseLib)
+- [CurseSharp](https://github.com/TournyMasterBot/CurseSharp)
