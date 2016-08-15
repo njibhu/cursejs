@@ -286,7 +286,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
 
     
 
-    <h4 class="name" id="banUser"><span class="type-signature"></span>banUser<span class="signature">(user, reason, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="banUser"><span class="type-signature"></span>banUser<span class="signature">(user, reason, ipBan, callback)</span><span class="type-signature"></span></h4>
 
     
 
@@ -375,6 +375,29 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
 
         <tr>
             
+                <td class="name"><code>ipBan</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>If true, ban the user with his ip.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>callback</code></td>
             
 
@@ -433,7 +456,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line83">line 83</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line84">line 84</a>
     </li></ul></dd>
     
 
@@ -570,7 +593,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line414">line 414</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line415">line 415</a>
     </li></ul></dd>
     
 
@@ -712,7 +735,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line125">line 125</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line126">line 126</a>
     </li></ul></dd>
     
 
@@ -739,7 +762,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>myServer.everyServerMembers(function(errors, user, done){    if(errors == null &amp;&amp; !done){        //Work with the user object        //Example to stop iterating:         //This will stop the iteration if the user with curse ID 1 is found        if(user.ID === 1){            return false;        }    }});</code></pre>
+    <pre class="prettyprint"><code>myServer.everyServerMembers(function(errors, user, done){    if(errors == null &amp;&amp; !done){        //Work with the user object        //Example to stop iterating:        //This will stop the iteration if the user with curse ID 1 is found        if(user.ID === 1){            return false;        }    }});</code></pre>
 
 
 
@@ -921,7 +944,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line278">line 278</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line279">line 279</a>
     </li></ul></dd>
     
 
@@ -1079,7 +1102,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line378">line 378</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line379">line 379</a>
     </li></ul></dd>
     
 
@@ -1366,7 +1389,7 @@ The keys are the roles IDs and the values are instances of the <a href="Role.htm
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line318">line 318</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line319">line 319</a>
     </li></ul></dd>
     
 
@@ -1647,7 +1670,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line350">line 350</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line351">line 351</a>
     </li></ul></dd>
     
 
@@ -1825,7 +1848,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line249">line 249</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line250">line 250</a>
     </li></ul></dd>
     
 
@@ -1980,7 +2003,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line299">line 299</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line300">line 300</a>
     </li></ul></dd>
     
 
@@ -2028,7 +2051,7 @@ All parameters are facultative, but use everyServerMembers to check the server m
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sun Aug 14 2016 03:42:57 GMT+0200 (DST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Aug 16 2016 01:01:41 GMT+0200 (DST)
 </footer>
 
 <script> prettyPrint(); </script>
