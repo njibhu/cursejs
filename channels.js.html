@@ -42,13 +42,20 @@ var conversationsModule = require('./conversations.js');
    On Curse side, [Conversations]{@link Conversation} and [Channels]{@link Channel} are exactly the same thing, but on the lib side,
    the text part of the channel is handled by the [Conversation]{@link Conversation} Class and the channel
    informations itself by the Channel class.
- * @property    {string}        ID              Curse UUID of the specified [Channel]{@link Channel}. This ID is shared with the corresponding conversation.
- * @property    {Client}        client          [Client]{@link Client} object used to create this [Channel]{@link Channel} instance.
- * @property    {string}        name            The name of the current [Channel]{@link Channel}.
- * @property    {string}        description     The description of the current [Channel]{@link Channel}.
- * @property    {Server}        server          The [Server]{@link Server} where the current channel is located.
- * @property    {boolean}       isVoiceChannel  False when the channel is a text only channel.
- * @property    {Conversation}  conversation    Corresponding [Conversation]{@link Conversation} object of the [Channel]{@link Channel}.
+ * @property    {string}        ID                      Curse UUID of the specified [Channel]{@link Channel}. This ID is shared with the corresponding conversation.
+ * @property    {Client}        client                  [Client]{@link Client} object used to create this [Channel]{@link Channel} instance.
+ * @property    {string}        name                    The name of the current [Channel]{@link Channel}.
+ * @property    {string}        description             The description of the current [Channel]{@link Channel}.
+ * @property    {Server}        server                  The [Server]{@link Server} where the current channel is located.
+ * @property    {boolean}       isVoiceChannel          False when the channel is a text only channel.
+ * @property    {Conversation}  conversation            Corresponding [Conversation]{@link Conversation} object of the [Channel]{@link Channel}.
+ * @property    {number}        displayOrder            Position of the channel in the channel list
+ * @property    {string}        displayCategoryID       Curse UUID of the display category
+ * @property    {string}        displayCategory         Name of the display category
+ * @property    {number}        displayCategoryRank     Position of the display Category in channel list
+ * @property    {boolean}       isDefaultChannel        True if it's the default channel of the server
+ * @property    {boolean}       isPublic                True if anyone can access it
+ * @property    {string}        urlPath                 Url path of the channel
  */
 class Channel {
     constructor(channelContract, server, client){
@@ -78,6 +85,14 @@ class Channel {
         this.name = channelContract.GroupTitle;
         this.description = channelContract.MessageOfTheDay;
 
+        this.displayOrder = channelContract.DisplayOrder;
+        this.displayCategoryID = channelContract.DisplayCategoryID;
+        this.displayCategory = channelContract.DisplayCategory;
+        this.displayCategoryRank = channelContract.DisplayCategoryRank;
+        this.isDefaultChannel = channelContract.IsDefaultChannel;
+        this.isPublic = channelContract.IsPublic;
+        this.urlPath = channelContract.UrlPath;
+
         //Defining voice channel or text channel
         this.isVoiceChannel = (channelContract.GroupMode == groupsModule.GroupMode.TextAndVoice);
 
@@ -93,6 +108,7 @@ class Channel {
 
         callback();
     }
+
 }
 
 exports.Channel = Channel;
@@ -106,13 +122,13 @@ exports.Channel = Channel;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerBan.html">ServerBan</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 30 2016 03:49:16 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon Aug 22 2016 09:56:54 GMT+0200 (DST)
 </footer>
 
 <script> prettyPrint(); </script>

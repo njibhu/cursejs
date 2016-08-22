@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Channel</title>
+    <title>JSDoc: Class: ServerMemberResult</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Channel</h1>
+    <h1 class="page-title">Class: ServerMemberResult</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2>Channel</h2>
+        <h2>ServerMemberResult</h2>
         
     
 </header>
@@ -40,17 +40,14 @@
 
     
 
-    <h4 class="name" id="Channel"><span class="type-signature"></span>new Channel<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="ServerMemberResult"><span class="type-signature"></span>new ServerMemberResult<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    <p>The <a href="Channel.html">Channel</a> class represent a voice or text only channel in a Curse server.
-   On Curse side, <a href="Conversation.html">Conversations</a> and <a href="Channel.html">Channels</a> are exactly the same thing, but on the lib side,
-   the text part of the channel is handled by the <a href="Conversation.html">Conversation</a> Class and the channel
-   informations itself by the Channel class.</p>
+    <p>ServerMemberResult is defining the structure of informations returned with a user when searching into the members of this server.</p>
 </div>
 
 
@@ -91,98 +88,6 @@
 
         <tr>
             
-                <td class="name"><code>ID</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Curse UUID of the specified <a href="Channel.html">Channel</a>. This ID is shared with the corresponding conversation.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>client</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Client.html">Client</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p><a href="Client.html">Client</a> object used to create this <a href="Channel.html">Channel</a> instance.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The name of the current <a href="Channel.html">Channel</a>.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>description</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The description of the current <a href="Channel.html">Channel</a>.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
                 <td class="name"><code>server</code></td>
             
 
@@ -199,20 +104,20 @@
 
             
 
-            <td class="description last"><p>The <a href="Server.html">Server</a> where the current channel is located.</p></td>
+            <td class="description last"><p>Server where the information about the user is coming from.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>isVoiceChannel</code></td>
+                <td class="name"><code>user</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">boolean</span>
+<span class="param-type"><a href="User.html">User</a></span>
 
 
             
@@ -222,20 +127,20 @@
 
             
 
-            <td class="description last"><p>False when the channel is a text only channel.</p></td>
+            <td class="description last"><p>Corresponding <a href="User.html">User</a> object.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>conversation</code></td>
+                <td class="name"><code>username</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Conversation.html">Conversation</a></span>
+<span class="param-type">string</span>
 
 
             
@@ -245,14 +150,83 @@
 
             
 
-            <td class="description last"><p>Corresponding <a href="Conversation.html">Conversation</a> object of the <a href="Channel.html">Channel</a>.</p></td>
+            <td class="description last"><p>Curse username.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>displayOrder</code></td>
+                <td class="name"><code>nickname</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Nickname of the user on this server, if set.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bestRole</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Role.html">Role</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p><a href="Role.html">Role</a> corresponding to the best role of the user on this server.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>roles</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Array of <a href="Role.html">Role</a> to which the user is member of on this server.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dateJoined</code></td>
             
 
             <td class="type">
@@ -268,60 +242,14 @@
 
             
 
-            <td class="description last"><p>Position of the channel in the channel list</p></td>
+            <td class="description last"><p>Server timestamp when the user joined this server.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>displayCategoryID</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Curse UUID of the display category</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>displayCategory</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Name of the display category</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>displayCategoryRank</code></td>
+                <td class="name"><code>connectionStatus</code></td>
             
 
             <td class="type">
@@ -337,14 +265,83 @@
 
             
 
-            <td class="description last"><p>Position of the display Category in channel list</p></td>
+            <td class="description last"></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>isDefaultChannel</code></td>
+                <td class="name"><code>dateLastSeen</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Server timestamp when the user was last seen (connected).</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dateLastActive</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Server timestamp when the user was last active.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dateRemoved</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isActive</code></td>
             
 
             <td class="type">
@@ -360,14 +357,37 @@
 
             
 
-            <td class="description last"><p>True if it's the default channel of the server</p></td>
+            <td class="description last"><p>True if the user is active.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>isPublic</code></td>
+                <td class="name"><code>currentGameID</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>ID of the current played game by the user.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isVoiceMuted</code></td>
             
 
             <td class="type">
@@ -383,20 +403,20 @@
 
             
 
-            <td class="description last"><p>True if anyone can access it</p></td>
+            <td class="description last"></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>urlPath</code></td>
+                <td class="name"><code>isVoiceDeafened</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -406,7 +426,76 @@
 
             
 
-            <td class="description last"><p>Url path of the channel</p></td>
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>avatarTimestamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isVerified</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isBanned</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
         </tr>
 
     
@@ -445,7 +534,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="channels.js.html">channels.js</a>, <a href="channels.js.html#line11">line 11</a>
+        <a href="servers.js.html">servers.js</a>, <a href="servers.js.html#line453">line 453</a>
     </li></ul></dd>
     
 

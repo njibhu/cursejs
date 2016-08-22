@@ -105,10 +105,11 @@ class Server {
      * Kick a User from the server
      * @param  {User}     user          Specified user to ban
      * @param  {string}   reason        Reason of the ban
+     * @param  {boolean}  ipBan         If true, ban the user with his ip.
      * @param  {Function} callback      Facultative arg, callback: (errors) => {}.
        This function can take an argument errors that is null or undefined when function ends correctly.
      */
-    banUser(user, reason, callback){
+    banUser(user, reason, ipBan, callback){
         //Define an empty void if no callback specified
         if(callback === undefined){
             callback = _ => {};
@@ -117,7 +118,7 @@ class Server {
             reason = "";
         }
         var self = this;
-        groupsEndpoints.serverBanUser(this.ID, user.ID, reason, this.client.token, function(errors){
+        groupsEndpoints.serverBanUser(this.ID, user.ID, reason, ipBan, this.client.token, function(errors){
             if(errors != undefined){
                 winston.log('error', 'Server.kickUser', 'Cannot kick user', user.ID);
                 callback(errors);
@@ -142,6 +143,7 @@ class Server {
      *
      *         //Work with the user object
      *
+     *         //Example to stop iterating:
      *         //This will stop the iteration if the user with curse ID 1 is found
      *         if(user.ID === 1){
      *             return false;
@@ -188,67 +190,22 @@ class Server {
     }
 
     /*
-     * Update the server channel list, call the callback when done
+     * Fetch group informations about the current server and send it to the update function
      * @param  {Function} callback Callback when list of channel is updated
      */
     _updateInformations(callback){
+        if(callback === undefined){
+            callback = _ => {};
+        }
         //Update channels, update roles, member count..
         var self = this;
 
         groupsEndpoints.getGroup(this.ID, false, this.client.token, function(errors, data){
             if(errors === null){
-                var groupNotif = data.content;
-
-                //To use only internally
-                self._groupNotification = groupNotif;
-
-                //Set server name
-                self.name = self._groupNotification.GroupTitle;
-
-                // Generate or update channelList:
-                for (let channelItem of groupNotif.Channels){
-                    //Checking that channel doesn't exit
-                    if(self.client.channels.has(channelItem.GroupID) == false){
-                        var channel = new channelsModule.Channel(channelItem, self, self.client);
-                        self.channelList.push(channel);
-                    }
-
-                    // If channel already exists, then we update it and check that it's in channelList
-                    else {
-                        var channel = self.client.channels.get(channelItem.GroupID);
-                        channel._update(channelItem);
-                        if(self.channelList.indexOf(channel) === -1){
-                            self.channelList.push(channel);
-                        }
-                    }
-                }
-
-                // Generate or update server roles
-                for (let roleItem of groupNotif.Roles){
-                    //Checking that the role is not a duplicate
-                    if(self.roles.has(roleItem["RoleID"]) === false){
-                        var role = new rolesModule.Role(
-                            roleItem["RoleID"],
-                            roleItem["Name"],
-                            roleItem["Rank"],
-                            roleItem["IsDefault"],
-                            self,
-                            self.client
-                        );
-                        self.roles.set(roleItem["RoleID"], role);
-                    }
-                    //If the role already exist, we just update it
-                    else {
-                        self.roles.get(roleItem["RoleID"]._update(
-                            roleItem["Name"],
-                            roleItem["Rank"],
-                            roleItem["IsDefault"]));
-                    }
-                }
+                self._updateFromInformations(data.content, callback);
 
                 //Callback with no errors
                 callback(null);
-
             } else {
                 winston.log('error', 'Server._updateInformations', 'Cannot fetch server informations, no update made');
                 winston.log('debug', 'Server._updateInformations', groupNotification.GroupID, groupNotification.GroupTitle);
@@ -257,6 +214,58 @@ class Server {
             }
         });
 
+    }
+
+    /*
+     * Update the server, it's channels, it's roles.. from a group notification
+     */
+    _updateFromInformations(groupNotif){
+        //To use only internally
+        this._groupNotification = groupNotif;
+
+        //Set server name
+        this.name = this._groupNotification.GroupTitle;
+
+        // Generate or update channelList:
+        for (let channelItem of groupNotif.Channels){
+            //Checking that channel doesn't exit
+            if(this.client.channels.has(channelItem.GroupID) == false){
+                var channel = new channelsModule.Channel(channelItem, this, this.client);
+                this.channelList.push(channel);
+            }
+
+            // If channel already exists, then we update it and check that it's in channelList
+            else {
+                var channel = this.client.channels.get(channelItem.GroupID);
+                channel._update(channelItem);
+                if(this.channelList.indexOf(channel) === -1){
+                    this.channelList.push(channel);
+                }
+            }
+        }
+
+        // Generate or update server roles
+        for (let roleItem of groupNotif.Roles){
+            //Checking that the role is not a duplicate
+            if(this.roles.has(roleItem["RoleID"]) === false){
+                var role = new rolesModule.Role(
+                    roleItem["RoleID"],
+                    roleItem["Name"],
+                    roleItem["Rank"],
+                    roleItem["IsDefault"],
+                    this,
+                    this.client
+                );
+                this.roles.set(roleItem["RoleID"], role);
+            }
+            //If the role already exist, we just update it
+            else {
+                this.roles.get(roleItem["RoleID"])._update(
+                    roleItem["Name"],
+                    roleItem["Rank"],
+                    roleItem["IsDefault"]);
+            }
+        }
     }
 
     /**
@@ -293,14 +302,7 @@ class Server {
      * @param  {number}   page      First page is 1.
      * @param  {Function} callback  Callback: (errors, bans) => {}.
      * * **errors** is null or undefined when function ends correctly.
-     * * **bans** is an **array** of ban objects following a specific definition:
-     *    * **user** - Banned [User]{@link User}.
-     *    * **userNickname** - Nickname of the banned user.
-     *    * **banner** - [User]{@link User} author of the ban.
-     *    * **bannerNickname** - Nickname of the author of the ban.
-     *    * **serverTimestamp** - **number**, timestamp of the server at the time of the ban.
-     *    * **reason** - **string** containing the reason of the ban from the author of the ban.
-     *    * **isIpBan** - **boolean**, **true** if this is an IP ban.
+     * * **bans** is an **array** of [ServerBan]{@link ServerBan}.
      */
     getBans(query, pagesize, page, callback){
         var self = this;
@@ -308,27 +310,7 @@ class Server {
             if(errors == null){
                 var bans = [];
                 for(let banItem of answer.content){
-                    //Link user with our users
-                    if(self.client.users.has(banItem.UserID)){
-                        var user = self.client.users.get(banItem.UserID);
-                    } else {
-                        var user = new usersModule.User(banItem.UserID, self.client);
-                    }
-                    //Link banner with our users
-                    if(self.client.users.has(banItem.RequestorUserID)){
-                        var userbanner = self.client.users.get(banItem.RequestorUserID);
-                    } else {
-                        var userbanner = new usersModule.User(banItem.RequestorUserID, self.client);
-                    }
-                    bans.push({
-                        user: user,
-                        userNickname: banItem.Username,
-                        banner: userbanner,
-                        bannerNickname: banItem.RequestorUsername,
-                        serverTimestamp: banItem.StatusTimestamp,
-                        reason: banItem.Reason,
-                        isIpBan: (banItem.MaskedIPAddress != null)
-                    });
+                    bans.push(new ServerBan(banItem, self));
                 }
                 callback(null, bans);
             } else {
@@ -377,7 +359,7 @@ class Server {
     }
 
     /**
-     * Search for a particular user, the callback returns an array of researchResult objects
+     * Search for a particular user, the callback returns an array of ServerMemberResult objects
      * All parameters are facultative, but use everyServerMembers to check the server memberlist
      * @param  {string}     Username      Username to search for
      * @param  {number}     RoleID        Role ID to look into
@@ -392,18 +374,7 @@ class Server {
      * @param  {boolean}    SortAscending Ascending is **true**, descending is **false**.
      * @param  {Function}   callback  Callback: (errors, results) => {}.
      * * **errors** is null or undefined when function ends correctly.
-     * * **results** is an **array** of researchResult objects following a specific definition:
-     *    * **User** - Corresponding [User]{@link User} object.
-     *    * **Username** - **string**, Curse username.
-     *    * **Nickname** - **string**, Nickname of the user on this server, if set.
-     *    * **BestRole** - [Role]{@link Role} corresponding to the best role of the user on this server.
-     *    * **Roles** - Array of [Role]{@link Role} to which the user is member of on this server.
-     *    * **DateJoined** - **number**, server timestamp when the user joined this server.
-     *    * **ConnectionStatus** - **number**
-     *    * **DateLastSeen** - **number**, server timestamp when the user was last seen (connected).
-     *    * **DateLastActive** - **number**, server timestamp when the user was last active.
-     *    * **IsActive** - **boolean**, true if the user is active.
-     *    * **CurrentGameID** - **number**, ID of the current played game by the user.
+     * * **results** is an **array** of [ServerMemberResult]{@link ServerMemberResult}.
      */
     searchUser(Username, RoleID, ResultSize, ResultPage, SortType, SortAscending, callback){
         var self = this;
@@ -413,26 +384,9 @@ class Server {
                     var data = answer.content;
                     var results = [];
                     for (let item of data){
-                        //Create researchResult object
-                        var researchResult = {
-                            User: self.client.getUser(item.UserID),
-                            Username: item.Username,
-                            Nickname: item.Nickname,
-                            BestRole: self.roles.get(item.BestRole),
-                            Roles: [],
-                            DateJoined: item.DateJoined,
-                            ConnectionStatus: item.ConnectionStatus,
-                            DateLastSeen: item.DateLastSeen,
-                            DateLastActive: item.DateLastActive,
-                            IsActive: item.IsActive,
-                            CurrentGameID: item.CurrentGameID
-                        }
-                        //Add roles to researchResult
-                        for (let role of item.Roles){
-                            researchResult.Roles.push(self.roles.get(role));
-                        }
+                        var servermember = new ServerMemberResult(item, self);
                         //Add researchResult to result array
-                        results.push(researchResult);
+                        results.push(servermember);
                     }
                     callback(null, results);
                 }
@@ -443,9 +397,168 @@ class Server {
         );
     }
 
+    /**
+     * Get user informations from the server.
+     * @param  {User}       user      User to get informations about
+     * @param  {Function}   callback  Callback: (errors, results) => {}.
+     * * **errors** is null or undefined when function ends correctly.
+     * * **results** is a [ServerMemberResult]{@link ServerMemberResult}.
+     */
+    getUserInfo(user, callback){
+        var self = this;
+        groupsEndpoints.getGroupMemberInfo(user.ID, this.ID, this.client.token, function(errors, answer){
+            if(errors === null){
+                var data = answer.content;
+                var result = new ServerMemberResult(data, self);
+                callback(null, result);
+            }
+            else {
+                callback(errors, null);
+            }
+        });
+    }
+
+    /**
+     * @description Iterate through all the bans of the server.
+     * @param  {Function}       callback        callback: (errors, ban, done) => {}.
+     * * **errors** is **null** or **undefined** when everything happens correctly.
+     * * **ban** is a [ServerBan]{@link ServerBan} object of the next ban.
+     * * **done** is a **boolean**, **true** when there is no more bans to iterate over.
+     * * To stop the iteration return false inside the callback
+     *
+     * @example
+     * myServer.everyBans(function(errors, ban, done){
+     *     if(errors == null &amp;&amp; !done){
+     *
+     *         //Work with the ServerBan object
+     *
+     *         //Example to stop iterating:
+     *         //This will stop the iteration if the user banned has curse ID 1
+     *         if(ban.user.ID === 1){
+     *             return false;
+     *         }
+     *     }
+     * });
+     */
+    everyBans(callback){
+        var self = this;
+        var page = 1;
+        var bansArray = [];
+        var continueLoop = true;
+        function requestCallback(){
+            groupsEndpoints.getBanList(self.ID, null, 50, page, self.client.token, function(errors, answer){
+                if(errors === null){
+                    bansArray = answer.content;
+
+                    //What if endpoints return empty array ?
+                    if(bansArray.length == 0){
+                        continueLoop = false;
+                        callback(null, undefined, true);
+                    } else {
+                        page = page + 1;
+                        while(bansArray.length > 0 &amp;&amp; continueLoop){
+                            var tempBan = bansArray.shift();
+                            var ban = new ServerBan(tempBan, self);
+
+                            //Stop loop when user return false
+                            continueLoop = callback(null, ban, false) != false;
+                        }
+                        if(bansArray.length == 0 &amp;&amp; continueLoop){
+                            requestCallback();
+                        }
+                    }
+                }
+                else{
+                    callback(errors, undefined, true);
+                }
+            });
+        }
+        requestCallback();
+    }
+
+}
+
+/**
+ * @class ServerMemberResult
+ * @description ServerMemberResult is defining the structure of informations returned with a user when searching into the members of this server.
+ * @property {Server}       server              Server where the information about the user is coming from.
+ * @property {User}         user                Corresponding [User]{@link User} object.
+ * @property {string}       username            Curse username.
+ * @property {string}       nickname            Nickname of the user on this server, if set.
+ * @property {Role}         bestRole            [Role]{@link Role} corresponding to the best role of the user on this server.
+ * @property {array}        roles               Array of [Role]{@link Role} to which the user is member of on this server.
+ * @property {number}       dateJoined          Server timestamp when the user joined this server.
+ * @property {number}       connectionStatus
+ * @property {number}       dateLastSeen        Server timestamp when the user was last seen (connected).
+ * @property {number}       dateLastActive      Server timestamp when the user was last active.
+ * @property {number}       dateRemoved
+ * @property {boolean}      isActive            True if the user is active.
+ * @property {number}       currentGameID       ID of the current played game by the user.
+ * @property {boolean}      isVoiceMuted
+ * @property {boolean}      isVoiceDeafened
+ * @property {number}       avatarTimestamp
+ * @property {boolean}      isVerified
+ * @property {boolean}      isBanned
+ */
+class ServerMemberResult {
+    constructor(groupMemberContract, server){
+        this.server = server;
+        this.user = server.client.getUser(groupMemberContract.UserID);
+        this.username = groupMemberContract.Username;
+        this.nickname = groupMemberContract.Nickname;
+        this.bestRole = server.roles.get(groupMemberContract.BestRole);
+        this.roles = [];
+        this.dateJoined = groupMemberContract.DateJoined;
+        this.connectionStatus = groupMemberContract.ConnectionStatus;
+        this.dateLastSeen = groupMemberContract.DateLastSeen;
+        this.dateLastActive = groupMemberContract.DateLastActive;
+        this.dateRemoved = groupMemberContract.DateRemoved;
+        this.isActive = groupMemberContract.IsActive;
+        this.currentGameID = groupMemberContract.currentGameID;
+        this.isVoiceMuted = groupMemberContract.IsVoiceMuted;
+        this.isVoiceDeafened = groupMemberContract.IsVoiceDeafened;
+        this.avatarTimestamp = groupMemberContract.AvatarTimestamp;
+        this.isVerified = groupMemberContract.IsVerified;
+        this.isBanned = groupMemberContract.IsBanned;
+
+        for(let role of groupMemberContract.Roles){
+            this.roles.push(server.roles.get(role));
+        }
+
+        //Help our local username cache here:
+        this.user._username = groupMemberContract.Username;
+    }
+}
+
+/**
+ * @class ServerBan
+ * @description ServerBan is defining the structure of informations returned when looking for server bans.
+ * @property {Server}    server                  Server of the ban.
+ * @property {User}      user                    Banned user.
+ * @property {string}    username                Nickname used by the user when he was banned.
+ * @property {User}      requestorUser           Ban requestor user.
+ * @property {string}    requestorUsername       Nickname used by the ban requestor when the banned occured.
+ * @property {number}    statusTimestamp         Timestamp of the ban.
+ * @property {string}    reason                  Reason of the ban, set by the requestor.
+ * @property {boolean}   isIpBan                 True if this is an ip ban.
+ * @property {string}    maskedIPAddress         Partially hidden IP Address of the banned user if it's an IP Ban.
+ */
+class ServerBan{
+    constructor(GroupBannedUserContract, server){
+        this.server = server,
+        this.user = server.client.getUser(GroupBannedUserContract.UserID);
+        this.username = GroupBannedUserContract.Username;
+        this.requestorUser = server.client.getUser(GroupBannedUserContract.RequestorUserID);
+        this.requestorUsername = GroupBannedUserContract.RequestorUsername;
+        this.statusTimestamp = GroupBannedUserContract.StatusTimestamp;
+        this.reason = GroupBannedUserContract.Reason;
+        this.isIpBan = (GroupBannedUserContract.MaskedIPAddress != null);
+        this.maskedIPAddress = GroupBannedUserContract.MaskedIPAddress;
+    }
 }
 
 exports.Server = Server;
+exports.ServerMemberResult = ServerMemberResult;
 </code></pre>
         </article>
     </section>
@@ -456,13 +569,13 @@ exports.Server = Server;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerBan.html">ServerBan</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 30 2016 03:49:16 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon Aug 22 2016 09:56:54 GMT+0200 (DST)
 </footer>
 
 <script> prettyPrint(); </script>

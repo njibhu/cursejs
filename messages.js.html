@@ -49,7 +49,7 @@ var winston = require('winston');
  * * Liked: 2   (message liked)
  * * Deleted: 3 (message deleted)
  * @property    {string}        senderName          Nickname (if set) or Curse username of the message author.
- * @property    {number}        senderID            Curse ID of the author of the message (same as MessageNotification.sender.ID).
+ * @property    {number}        senderID            **DEPRECATED** Curse ID of the author of the message (Please use MessageNotification.sender.ID).
  * @property    {User}          sender              [User]{@link User} object corresponding to the author of the message.
  * @property    {number}        serverTimestamp     Timestamp of the message on the server side.
  * @property    {number}        likes               Amount of likes.
@@ -57,6 +57,14 @@ var winston = require('winston');
  * @property    {boolean}       isDeleted           True if the message have been deleted (content will be empty then).
  * @property    {Role}          senderVanityRole    Most important [Role]{@link Role} of the author on this server (**undefined** if not a conversation from a server).
  * @property    {array}         senderRoles         Array of [Role]{@link Role} of the author on this server (**undefined** if not a conversation from a server).
+ * @property    {number}        editedTimestamp     Timestamp of the last edition of the message, if none, it is set at 0.
+ * @property    {User}          editedUser          [User]{@link User} object corresponding to the author of the last edition of this message.
+ * @property    {string}        editedUsername      Nickname or Curse username of the author of the last edition of this message.
+ * @property    {number}        deletedTimestamp    Timestamp of the suppression of the message, if none, it is set at 0.
+ * @property    {User}          deletedUser         [User]{@link User} object corresponding to the author of the suppression this message.
+ * @property    {string}        deletedUsername     Nickname or Curse username of the author of the suppression of this message.
+ * @property    {array}         mentions            Array of {Users}[@link User] mentioned in this message.
+ * @property    {boolean}       atEveryoneMention   True if there is a global mention in the message.
  */
 class MessageNotification {
     constructor(conversationMessageNotification, conversation, client){
@@ -69,16 +77,31 @@ class MessageNotification {
         this.conversation = conversation;
         this.ID = conversationMessageNotification.ServerID;
         this.content = conversationMessageNotification.Body;
-        this.notificationType = conversationMessageNotification.NotificationType;
-        this.senderName = conversationMessageNotification.SenderName;
-        this.senderID = conversationMessageNotification.SenderID;
         this.serverTimestamp = conversationMessageNotification.Timestamp;
-        this.likes = conversationMessageNotification.LikeCount;
-        this.likeUserIDs = conversationMessageNotification.LikeUserIDs;
-        this.isDeleted = (conversationMessageNotification.NotificationType
-            == conversationsEndpoint.ConversationNotificationType.Deleted);
+        this.notificationType = conversationMessageNotification.NotificationType;
+
+        this.sender;
+        this.senderName = conversationMessageNotification.SenderName;
+        this.senderID = conversationMessageNotification.SenderID; // /!\ Deprecated
         this.senderVanityRole;
         this.senderRoles = [];
+
+        this.likes = conversationMessageNotification.LikeCount;
+        this.likeUserIDs = conversationMessageNotification.LikeUserIDs;
+
+        this.editedTimestamp = conversationMessageNotification.EditedTimestamp;
+        this.editedUser = this.client.getUser(conversationMessageNotification.EditedUserID);
+        this.editedUsername = conversationMessageNotification.EditedUsername;
+
+        this.isDeleted = (conversationMessageNotification.NotificationType
+            == conversationsEndpoint.ConversationNotificationType.Deleted);
+        this.deletedTimestamp = conversationMessageNotification.DeletedTimestamp;
+        this.deletedUser = this.client.getUser(conversationMessageNotification.DeletedUserID);
+        this.deletedUsername = conversationMessageNotification.DeletedUsername;
+
+        this.mentions = [];
+        this.atEveryoneMention = false;
+
 
         //Link to our users
         if(client.users.has(conversationMessageNotification.SenderID)){
@@ -88,13 +111,22 @@ class MessageNotification {
         }
 
         //Add roles field to message
-        if(this.conversation.channel != undefined){
+        if(this.client.servers.has(conversationMessageNotification.RootConversationID)){
             //Update VanityRole
-            var server = this.conversation.channel.server;
+            var server = this.client.servers.get(conversationMessageNotification.RootConversationID);
             this.senderVanityRole = server.roles.get(conversationMessageNotification.SenderVanityRole);
             //Update Roles
             for (let roleID of conversationMessageNotification.SenderRoles){
                 this.senderRoles.push(server.roles.get(roleID));
+            }
+        }
+
+        //Link mentions to users objects
+        for (let user of conversationMessageNotification.Mentions){
+            if(user === 0){
+                this.atEveryoneMention = true;
+            } else {
+                this.mentions.push(this.client.getUser(user));
             }
         }
     }
@@ -110,12 +142,22 @@ class MessageNotification {
         if(callback === undefined){
             callback = _ => {};
         }
+        var retrying = false;
         var self = this;
-        //TODO: Check twice like with deleteMessage
-        var req = new conversationsEndpoint.ConversationEditMessageRequest(newContent, []);
-        conversationsEndpoint.conversationsEdit(this.conversation.ID, this.ID,
-            this.serverTimestamp, req, this.conversation.client.token, function(errors){
-                if(errors != undefined){
+        (function inner(){
+            var req = new conversationsEndpoint.ConversationEditMessageRequest(newContent, []);
+            conversationsEndpoint.conversationsEdit(self.conversation.ID, self.ID,
+                self.serverTimestamp, req, self.conversation.client.token, function(errors){
+
+                //Handle backend cache issue
+                if(errors != undefined &amp;&amp; errors.code === 404 &amp;&amp; !retrying){
+                    retrying = true;
+                    winston.log('debug', 'Message.editContent', 'First attempt denied, retrying');
+                    setTimeout(function(){
+                        inner();
+                    }, 1000);
+                }
+                else if(errors != undefined){
                     winston.log('error', 'Message.editContent', 'Cannot edit message', self.ID);
                     callback(errors);
                 }
@@ -123,6 +165,8 @@ class MessageNotification {
                     callback(null);
                 }
             });
+        })();
+
     }
 
     /**
@@ -135,37 +179,30 @@ class MessageNotification {
         if(callback === undefined){
             callback = _ => {};
         }
+        var retrying = false;
         var self = this;
-        conversationsEndpoint.conversationsDelete(this.conversation.ID, this.ID,
-            this.serverTimestamp, this.conversation.client.token, function(errors){
-                //Check twice, sometimes the notifications endpoint is too fast for the conversations endpoint
-                //and conversation isn't aware of the message yet. So we wait 1sec and try again..
+        (function inner(){
+            conversationsEndpoint.conversationsDelete(self.conversation.ID, self.ID,
+                self.serverTimestamp, self.conversation.client.token, function(errors){
 
                 //We check for an existing error with the code 404 encountered for the first time
-                if(errors != undefined &amp;&amp; errors.code === 404 &amp;&amp; self._secondDelete == undefined){
+                if(errors != undefined &amp;&amp; errors.code === 404 &amp;&amp; !retrying){
                     winston.log('debug', 'Message.deleteContent', 'First attempt denied, retrying');
-                    self._secondDelete = setTimeout(function(){
-                        self.deleteMessage(callback);
+                    setTimeout(function(){
+                        inner();
                     }, 1000);
                 }
                 //Handle second time error, or other kind of errors than previously check
                 else if(errors != undefined){
-                    //Clean the request checker
-                    if(self._secondDelete != undefined){
-                        delete(self._secondDelete);
-                    }
                     winston.log('error', 'Message.deleteContent', 'Cannot delete message', self.ID, self.serverTimestamp);
                     callback(errors);
                 }
                 //It worked
                 else {
-                    //Clean the request checker
-                    if(self._secondDelete != undefined){
-                        delete(self._secondDelete);
-                    }
                     callback(null);
                 }
             });
+        })();
     }
 
     reply(content, callback){
@@ -186,13 +223,13 @@ exports.NotificationType = conversationsEndpoint.ConversationNotificationType;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Conversation.html">Conversation</a></li><li><a href="MessageNotification.html">MessageNotification</a></li><li><a href="Role.html">Role</a></li><li><a href="Server.html">Server</a></li><li><a href="ServerBan.html">ServerBan</a></li><li><a href="ServerMemberResult.html">ServerMemberResult</a></li><li><a href="User.html">User</a></li></ul><h3>Events</h3><ul><li><a href="Client.html#.event:message_deleted">message_deleted</a></li><li><a href="Client.html#.event:message_edited">message_edited</a></li><li><a href="Client.html#.event:message_liked">message_liked</a></li><li><a href="Client.html#.event:message_received">message_received</a></li><li><a href="Client.html#.event:ready">ready</a></li><li><a href="Client.html#.event:server_change">server_change</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jul 30 2016 03:49:16 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon Aug 22 2016 09:56:54 GMT+0200 (DST)
 </footer>
 
 <script> prettyPrint(); </script>
