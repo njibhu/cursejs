@@ -24,4 +24,4 @@
 
 - Server roles are now available on server private messages. The senderVanityRole and senderRoles are not undefined anymore when receiving a private message in a server.
 
-- The "@everyone" mentions won't break the notifications anymore, it will not been inside the MessageNotification.mentions array but a new property called atEveryoneMention have been added. This boolean is set to true when the message is a global mention.
+- The "@everyone" mentions won't break the notifications anymore, it won't be inside the MessageNotification.mentions array but a new property called atEveryoneMention have been added. This boolean is set to true when the message is a global mention.
